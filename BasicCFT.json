@@ -1,0 +1,225 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Mappings": {
+      "RegionMap": {
+          "AMI": {
+              "US1404HVM": "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-20230325"
+          },
+          "us-east-2": {
+            "US1404HVM": "ami-0a695f0d95cefc163"
+           
+        },
+          "ap-south-1": {
+              "US1404HVM": "ami-02eb7a4783e7e9317"
+             
+          },
+          "us-east-1": {
+              "US1404HVM": "ami-007855ac798b5175e"
+             
+          },
+          "us-west-1": {
+              "US1404HVM": "ami-014d05e6b24240371"
+             
+          },
+          "us-west-2": {
+              "US1404HVM": "ami-0fcf52bcf5db7b003"
+          }
+      }
+  },
+    "Resources" : {
+        "myVPC" : {
+            "Type" : "AWS::EC2::VPC",
+            "Properties" : {
+               "CidrBlock" : "10.0.0.0/16",
+               "EnableDnsSupport" : "true",
+               "EnableDnsHostnames" : "true"
+               
+            }
+         },
+          
+         "mySubnet" : {
+            "Type" : "AWS::EC2::Subnet",
+            "Properties" : {
+               "VpcId" : { "Ref" : "myVPC" },
+               "CidrBlock" : "10.0.0.0/24",
+               "MapPublicIpOnLaunch" : "true"
+            }
+         },
+         "myInternetGateway" : {
+               "Type" : "AWS::EC2::InternetGateway",
+               "Properties" : {
+                 "Tags" : [ {"Key" : "Name", "Value" : "lab-gateway"}]
+               }
+            },
+            "VpcGWattach" : {
+           "Type" : "AWS::EC2::VPCGatewayAttachment",
+           "Properties" : {
+               "InternetGatewayId" : { "Ref" : "myInternetGateway" },
+               "VpcId" : { "Ref" : "myVPC" }
+             }
+         },
+         "myRouteTable" : {
+            "Type" : "AWS::EC2::RouteTable",
+            "Properties" : {
+               "VpcId" : { "Ref" : "myVPC" }
+            }
+         },
+         "myRoute" : {
+            "Type" : "AWS::EC2::Route",
+            "Properties" : {
+               "RouteTableId" : { "Ref" : "myRouteTable" },
+               "DestinationCidrBlock" : "0.0.0.0/0",
+               "GatewayId" : { "Ref" : "myInternetGateway" }
+            }
+         },
+         "mySubnetRouteTableAssociation" : {
+            "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties" : {
+               "SubnetId" : { "Ref" : "mySubnet" },
+               "RouteTableId" : { "Ref" : "myRouteTable" }
+            }
+         },
+         "IPAddress": {
+            "Type": "AWS::EC2::EIP",
+            "Properties": {
+              "Domain": "myVPC"
+            }
+          },
+          "AssociateControlPort": {
+            "Type": "AWS::EC2::EIPAssociation",
+            "Properties": {
+              "AllocationId": {
+                "Fn::GetAtt": ["IPAddress", "AllocationId"]
+              },
+              "InstanceId": {"Ref": "EC2Instance"}
+            }
+          },
+         "InstanceSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+               "GroupDescription": "Base Security Group",
+               "VpcId" : {"Ref" : "myVPC"},
+               "SecurityGroupIngress": [
+
+                  {
+                    "IpProtocol": "tcp",
+                    "FromPort": "443",
+                    "ToPort": "9091",
+                    "CidrIp": "0.0.0.0/0"
+                  },
+                  {
+                    "IpProtocol": "tcp",
+                    "FromPort": "80",
+                    "ToPort": "9091",
+                    "CidrIp": "0.0.0.0/0"
+                  },
+                  {
+                    "IpProtocol": "tcp",
+                    "FromPort": "22",
+                    "ToPort": "22",
+                    "CidrIp": "0.0.0.0/0"
+                  },
+                  {
+                    "IpProtocol": "tcp",
+                    "FromPort": "5439",
+                    "ToPort": "5439",
+                    "CidrIp": "0.0.0.0/0"
+                  },
+                  {
+                    "IpProtocol": "tcp",
+                    "FromPort": "1433",
+                    "ToPort": "1433",
+                    "CidrIp": "0.0.0.0/0"
+                  },
+                  {
+                    "IpProtocol": "tcp",
+                    "FromPort": "2181",
+                    "ToPort": "2181",
+                    "CidrIp": "0.0.0.0/0"
+                  },
+                  {
+                    "IpProtocol": "tcp",
+                    "FromPort": "1521",
+                    "ToPort": "1521",
+                    "CidrIp": "0.0.0.0/0"
+                  },
+                  {
+                    "IpProtocol": "tcp",
+                    "FromPort": "5001",
+                    "ToPort": "5001",
+                    "CidrIp": "0.0.0.0/0"
+                  },
+                  {
+                    "IpProtocol": "tcp",
+                    "FromPort": "8000",
+                    "ToPort": "8000",
+                    "CidrIp": "0.0.0.0/0"
+                  },
+                  {
+                    "IpProtocol": "tcp",
+                    "FromPort": "9021",
+                    "ToPort": "9021",
+                    "CidrIp": "0.0.0.0/0"
+                  },
+                  {
+                    "IpProtocol": "tcp",
+                    "FromPort": "9000",
+                    "ToPort": "9000",
+                    "CidrIp": "0.0.0.0/0"
+                  },
+                  {
+                    "IpProtocol": "tcp",
+                    "FromPort": "9091",
+                    "ToPort": "9091",
+                    "CidrIp": "0.0.0.0/0"
+                  },
+                  {
+                    "IpProtocol": "tcp",
+                    "FromPort": "0",
+                    "ToPort": "65535",
+                    "CidrIp": "0.0.0.0/0"
+                  }
+               ]
+            }
+         },
+  "NewKeyPair": {
+            "Type": "AWS::EC2::KeyPair",
+            "Properties": {
+                "KeyName": "MyKeyPair"
+            }
+        },
+ "EC2Instance" : {
+    "Type" : "AWS::EC2::Instance",
+    "Properties" : {
+               "InstanceType" : "t2.micro",
+               "ImageId" : { 
+          "Fn::FindInMap" : [ 
+            "RegionMap", 
+            { 
+              "Ref" : "AWS::Region" 
+            }, 
+            "US1404HVM"
+          ]
+        },
+               "KeyName" : {"Ref": "NewKeyPair"},
+               "Tags" : [
+                {"Key" : "Name", "Value" : "my-lab-ec2"}
+               ],
+               "NetworkInterfaces": [   
+                   {
+                     "DeleteOnTermination": "true",
+                     "GroupSet": [{"Ref" : "InstanceSecurityGroup"}],
+                     "DeviceIndex": 0,
+                     "SubnetId": { "Ref" : "mySubnet" },
+                     "AssociatePublicIpAddress": "true"
+                   }
+                 ]
+                
+            }
+         }
+    }
+   }
+                                   
+      
+    
+    
